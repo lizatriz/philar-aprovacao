@@ -1,0 +1,62 @@
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { headers } from 'next/headers';
+import { exigirAdmin } from '@/lib/auth';
+import { db, carregarPosts } from '@/lib/supabase';
+import { excluirCliente, gerarLinkNovo } from '@/app/actions';
+import NovoPost from '@/components/NovoPost';
+import CopiarLink from '@/components/CopiarLink';
+import Portal from '@/components/Portal';
+import BotaoConfirmar from '@/components/BotaoConfirmar';
+
+export const dynamic = 'force-dynamic';
+
+export default async function ClienteAdmin({ params }) {
+  await exigirAdmin();
+  const { id } = await params;
+  const { data: cliente } = await db().from('clientes').select('*').eq('id', id).maybeSingle();
+  if (!cliente) notFound();
+
+  const posts = await carregarPosts(cliente.id);
+  const h = await headers();
+  const host = h.get('x-forwarded-host') || h.get('host');
+  const proto = h.get('x-forwarded-proto') || 'https';
+  const link = `${proto}://${host}/c/${cliente.token}`;
+
+  return (
+    <main className="pagina">
+      <header className="topo">
+        <div>
+          <div className="marca"><Link href="/admin">← Clientes</Link></div>
+          <h1>{cliente.nome}</h1>
+        </div>
+        <BotaoConfirmar
+          acao={excluirCliente.bind(null, cliente.id)}
+          pergunta={`Excluir ${cliente.nome} e todos os posts? Isso não tem volta.`}
+          className="btn perigo mini"
+        >
+          Excluir cliente
+        </BotaoConfirmar>
+      </header>
+
+      <div className="caixa" style={{ marginBottom: 24 }}>
+        <label>Link de aprovação do cliente</label>
+        <CopiarLink link={link} />
+        <form action={gerarLinkNovo.bind(null, cliente.id)} style={{ marginTop: 8 }}>
+          <button className="btn perigo mini" style={{ paddingLeft: 0 }}>
+            Gerar link novo (o antigo para de funcionar)
+          </button>
+        </form>
+      </div>
+
+      <div className="layout-admin">
+        <aside>
+          <NovoPost clienteId={cliente.id} />
+        </aside>
+        <section>
+          <Portal posts={posts} modo="admin" />
+        </section>
+      </div>
+    </main>
+  );
+}

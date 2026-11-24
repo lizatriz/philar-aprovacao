@@ -47,7 +47,7 @@ export default function Calendario({ posts, aoEscolher }) {
               <div className="cal-num">{d.getDate()}</div>
               {(porDia[k] || []).map((p) => (
                 <button key={p.id} className={`cal-item ${p.status}`} title={p.titulo} onClick={() => aoEscolher(p.id)}>
-                  {p.titulo}
+                  {p.formato === 'stories' && <span className="cal-story">Story</span>}{p.titulo}
                 </button>
               ))}
             </div>

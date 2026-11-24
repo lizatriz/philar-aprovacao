@@ -159,3 +159,62 @@ label { display: block; font-size: 13px; font-weight: 600; color: var(--suave); 
   .cal-item { font-size: 10px; padding: 2px 4px; }
   .linha2 { grid-template-columns: 1fr; }
 }
+
+/* Logos */
+.faixa-marca { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+.faixa-marca .marca { padding-left: 14px; border-left: 1px solid var(--linha); }
+.faixa-marca .marca:first-child { padding-left: 0; border-left: 0; }
+.logo-agencia { height: 38px; width: auto; max-width: 180px; object-fit: contain; display: block; }
+.cab-cliente { display: flex; align-items: center; gap: 16px; }
+.logo-cliente {
+  width: 72px; height: 72px; flex-shrink: 0; object-fit: contain; padding: 8px;
+  background: #fff; border: 1px solid var(--linha); border-radius: 16px;
+}
+.logo-cliente.mini { width: 44px; height: 44px; padding: 5px; border-radius: 10px; }
+.titulo-cartao { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.enviar-logo { display: flex; align-items: center; gap: 14px; }
+.logo-prev {
+  width: 64px; height: 64px; flex-shrink: 0; border-radius: 14px; border: 1px dashed var(--linha);
+  background: #fff; display: grid; place-items: center; overflow: hidden;
+}
+.logo-prev img { width: 100%; height: 100%; object-fit: contain; padding: 6px; }
+.logo-prev span { font-size: 11px; color: var(--suave); }
+.config-cliente { display: grid; grid-template-columns: auto 1fr; gap: 16px; margin-bottom: 24px; }
+@media (max-width: 860px) { .config-cliente { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .logo-cliente { width: 56px; height: 56px; } }
+
+/* Abas principais: Posts / Stories / Calendário */
+.secoes { display: flex; gap: 4px; border-bottom: 1px solid var(--linha); margin-bottom: 18px; overflow-x: auto; scrollbar-width: none; }
+.secoes button {
+  appearance: none; border: 0; background: transparent; font: inherit; font-weight: 600; font-size: 15px;
+  color: var(--suave); padding: 10px 14px 12px; cursor: pointer; border-bottom: 2px solid transparent;
+  margin-bottom: -1px; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+}
+.secoes button.ativa { color: var(--texto); border-bottom-color: var(--marca); }
+.bolinha {
+  min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--destaque); color: #fff;
+  font-size: 12px; display: inline-grid; place-items: center;
+}
+
+/* Stories em formato de celular */
+.grade-stories { grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); }
+.story { position: relative; aspect-ratio: 9 / 16; background: #111; overflow: hidden; }
+.story > img, .story > video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.story > video { object-fit: contain; }
+.story-barras { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; gap: 4px; z-index: 2; }
+.story-barras span { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,.35); }
+.story-barras span.cheia { background: #fff; }
+.story .contador { top: 22px; }
+.story-toque {
+  position: absolute; top: 0; bottom: 70px; width: 30%; border: 0; background: transparent; cursor: pointer; z-index: 1;
+  display: flex; align-items: center; padding: 0 8px; color: #fff; font-size: 26px;
+}
+.story-toque.esq { left: 0; justify-content: flex-start; }
+.story-toque.dir { right: 0; justify-content: flex-end; }
+.story-toque span {
+  width: 34px; height: 34px; border-radius: 50%; background: rgba(0,0,0,.35); display: grid; place-items: center;
+  opacity: .8; line-height: 1;
+}
+.story-toque:hover span { opacity: 1; }
+.cal-story { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; margin-right: 4px; opacity: .75; }
+@media (max-width: 640px) { .grade-stories { grid-template-columns: 1fr; max-width: 360px; margin: 0 auto; } }

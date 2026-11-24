@@ -34,7 +34,9 @@ export async function excluirCliente(clienteId) {
   await exigirAdmin();
   const supa = db();
   const { data: posts } = await supa.from('posts').select('midias').eq('cliente_id', clienteId);
+  const { data: cli } = await supa.from('clientes').select('logo_path').eq('id', clienteId).single();
   const paths = (posts || []).flatMap((p) => p.midias.map((m) => m.path));
+  if (cli?.logo_path) paths.push(cli.logo_path);
   if (paths.length) await supa.storage.from(BUCKET).remove(paths);
   await supa.from('clientes').delete().eq('id', clienteId);
   redirect('/admin');
@@ -61,6 +63,55 @@ export async function prepararUploads(clienteId, arquivos) {
     resultado.push({ path, token: data.token, tipo: arq.tipo });
   }
   return resultado;
+}
+
+/* ---------- Logos ---------- */
+
+// alvo = 'agencia' ou o id de um cliente
+export async function prepararUploadLogo(alvo, nomeArquivo) {
+  await exigirAdmin();
+  const ext = (nomeArquivo.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const pasta = alvo === 'agencia' ? 'marca' : alvo;
+  const path = `${pasta}/logo-${crypto.randomUUID()}.${ext}`;
+  const { data, error } = await db().storage.from(BUCKET).createSignedUploadUrl(path);
+  if (error) throw error;
+  return { path, token: data.token };
+}
+
+export async function salvarLogo(alvo, path) {
+  await exigirAdmin();
+  const supa = db();
+  if (alvo === 'agencia') {
+    // apaga logos antigos da agência
+    const { data } = await supa.storage.from(BUCKET).list('marca', { limit: 100 });
+    const antigos = (data || [])
+      .filter((f) => f.name?.startsWith('logo-') && `marca/${f.name}` !== path)
+      .map((f) => `marca/${f.name}`);
+    if (antigos.length) await supa.storage.from(BUCKET).remove(antigos);
+    revalidatePath('/', 'layout');
+    return;
+  }
+  const { data: cliente } = await supa.from('clientes').select('logo_path').eq('id', alvo).single();
+  await supa.from('clientes').update({ logo_path: path }).eq('id', alvo);
+  if (cliente?.logo_path && cliente.logo_path !== path) {
+    await supa.storage.from(BUCKET).remove([cliente.logo_path]);
+  }
+  revalidatePath('/', 'layout');
+}
+
+export async function removerLogo(alvo) {
+  await exigirAdmin();
+  const supa = db();
+  if (alvo === 'agencia') {
+    const { data } = await supa.storage.from(BUCKET).list('marca', { limit: 100 });
+    const todos = (data || []).filter((f) => f.name?.startsWith('logo-')).map((f) => `marca/${f.name}`);
+    if (todos.length) await supa.storage.from(BUCKET).remove(todos);
+  } else {
+    const { data: cliente } = await supa.from('clientes').select('logo_path').eq('id', alvo).single();
+    if (cliente?.logo_path) await supa.storage.from(BUCKET).remove([cliente.logo_path]);
+    await supa.from('clientes').update({ logo_path: null }).eq('id', alvo);
+  }
+  revalidatePath('/', 'layout');
 }
 
 export async function criarPost(clienteId, dados) {

@@ -36,7 +36,14 @@ alter table clientes enable row level security;
 alter table posts enable row level security;
 alter table comentarios enable row level security;
 
+-- Permissão só para o servidor do site (chave secreta)
+grant usage on schema public to service_role;
+grant all on table clientes, posts, comentarios to service_role;
+
 -- Pasta privada para as imagens e vídeos
 insert into storage.buckets (id, name, public)
 values ('midias', 'midias', false)
 on conflict (id) do nothing;
+
+-- Logo de cada cliente
+alter table clientes add column if not exists logo_path text;

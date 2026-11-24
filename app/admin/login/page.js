@@ -1,22 +1,9 @@
-'use client';
+import { logoAgencia } from '@/lib/supabase';
+import FormLogin from '@/components/FormLogin';
 
-import { useActionState } from 'react';
-import { login } from '@/app/actions';
+export const dynamic = 'force-dynamic';
 
-export default function Login() {
-  const [estado, acao, enviando] = useActionState(login, null);
-  return (
-    <main className="pagina" style={{ maxWidth: 420, paddingTop: 100 }}>
-      <div className="marca">Philar</div>
-      <h1 style={{ margin: '6px 0 24px' }}>Área da agência</h1>
-      <form action={acao} className="caixa">
-        <div className="campo">
-          <label htmlFor="senha">Senha</label>
-          <input id="senha" name="senha" type="password" autoFocus required />
-        </div>
-        {estado?.erro && <p className="erro">{estado.erro}</p>}
-        <button className="btn" disabled={enviando}>{enviando ? 'Entrando…' : 'Entrar'}</button>
-      </form>
-    </main>
-  );
+export default async function Login() {
+  const logoUrl = await logoAgencia().catch(() => null);
+  return <FormLogin logoUrl={logoUrl} />;
 }

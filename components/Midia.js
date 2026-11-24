@@ -1,8 +1,14 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import MidiaStory from './MidiaStory';
 
 export default function Midia({ midias, formato }) {
+  if (formato === 'stories') return <MidiaStory midias={midias} />;
+  return <MidiaCarrossel midias={midias} formato={formato} />;
+}
+
+function MidiaCarrossel({ midias, formato }) {
   const trilho = useRef(null);
   const [atual, setAtual] = useState(0);
   const total = midias.length;

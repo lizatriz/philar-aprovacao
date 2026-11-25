@@ -55,3 +55,9 @@ As cores estão no começo de `app/globals.css` (`--marca`, `--destaque`, `--fun
 - Para adicionar alguém: **Equipe → Adicionar pessoa**. Envie o e-mail e a senha provisória. No primeiro login, a pessoa cria a própria senha.
 - Se alguém esquecer a senha: **Equipe → Nova senha**.
 - Recomendado no Supabase: Authentication → Sign In / Providers → desligue **Allow new users to sign up** (só a dona cria contas, pelo painel).
+
+## Fase 2: casa de cada cliente
+- Abas: Conteúdos, Linha editorial, Marca (arquivos) e Acessos (cofre de senhas).
+- O cofre precisa da variável `COFRE_CHAVE` na Vercel. Gere a chave na própria aba Acessos (botão "Gerar chave").
+- **Nunca troque nem apague a `COFRE_CHAVE` depois de cadastrar senhas.** Sem ela, as senhas não abrem mais.
+- Cada visualização ou cópia de senha fica registrada; a dona vê o histórico em cada acesso.

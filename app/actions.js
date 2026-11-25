@@ -25,7 +25,9 @@ export async function excluirCliente(clienteId) {
   const supa = db();
   const { data: posts } = await supa.from('posts').select('midias').eq('cliente_id', clienteId);
   const { data: cli } = await supa.from('clientes').select('logo_path').eq('id', clienteId).single();
+  const { data: marca } = await supa.from('arquivos_marca').select('path').eq('cliente_id', clienteId);
   const paths = (posts || []).flatMap((p) => p.midias.map((m) => m.path));
+  (marca || []).forEach((a) => paths.push(a.path));
   if (cli?.logo_path) paths.push(cli.logo_path);
   if (paths.length) await supa.storage.from(BUCKET).remove(paths);
   await supa.from('clientes').delete().eq('id', clienteId);

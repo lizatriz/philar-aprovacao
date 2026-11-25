@@ -61,3 +61,44 @@ grant all on table equipe to service_role;
 
 alter table posts add column if not exists criado_por uuid references equipe(user_id) on delete set null;
 alter table comentarios add column if not exists membro_id uuid references equipe(user_id) on delete set null;
+
+-- Fase 2: linha editorial, arquivos da marca e cofre de acessos
+alter table clientes add column if not exists linha_editorial jsonb not null default '{}';
+alter table clientes add column if not exists linha_atualizada_em timestamptz;
+alter table clientes add column if not exists linha_atualizada_por uuid references equipe(user_id) on delete set null;
+
+create table if not exists arquivos_marca (
+  id uuid primary key default gen_random_uuid(),
+  cliente_id uuid not null references clientes(id) on delete cascade,
+  nome text not null,
+  path text not null,
+  tipo text,
+  tamanho bigint,
+  criado_por uuid references equipe(user_id) on delete set null,
+  criado_em timestamptz not null default now()
+);
+
+create table if not exists acessos (
+  id uuid primary key default gen_random_uuid(),
+  cliente_id uuid not null references clientes(id) on delete cascade,
+  plataforma text not null,
+  usuario text,
+  senha_cifrada text not null,
+  link text,
+  observacoes text,
+  criado_por uuid references equipe(user_id) on delete set null,
+  atualizado_em timestamptz not null default now()
+);
+
+create table if not exists acessos_log (
+  id uuid primary key default gen_random_uuid(),
+  acesso_id uuid not null references acessos(id) on delete cascade,
+  membro_id uuid references equipe(user_id) on delete set null,
+  acao text not null,
+  criado_em timestamptz not null default now()
+);
+
+alter table arquivos_marca enable row level security;
+alter table acessos enable row level security;
+alter table acessos_log enable row level security;
+grant all on table arquivos_marca, acessos, acessos_log to service_role;

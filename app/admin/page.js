@@ -1,14 +1,14 @@
 import Link from 'next/link';
-import { exigirAdmin } from '@/lib/auth';
+import { exigirEquipe } from '@/lib/auth';
 import { db, logoAgencia, urlsAssinadas } from '@/lib/supabase';
-import { criarCliente, sair } from '@/app/actions';
+import { criarCliente } from '@/app/actions';
 import EnviarLogo from '@/components/EnviarLogo';
-import LogoAgencia from '@/components/LogoAgencia';
+import NavAdmin from '@/components/NavAdmin';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Admin() {
-  await exigirAdmin();
+  const membro = await exigirEquipe();
   const { data: clientes, error } = await db()
     .from('clientes')
     .select('id, nome, logo_path, posts(status)')
@@ -21,18 +21,17 @@ export default async function Admin() {
 
   return (
     <main className="pagina">
+      <NavAdmin membro={membro} ativa="clientes" />
       <header className="topo">
-        <div>
-          <LogoAgencia url={logoUrl} legenda="Área da agência" />
-          <h1>Clientes</h1>
-        </div>
-        <form action={sair}><button className="btn claro mini">Sair</button></form>
+        <h1>Olá, {membro.nome.split(' ')[0]}</h1>
       </header>
 
-      <div className="config-cliente">
-        <div className="caixa">
-          <EnviarLogo alvo="agencia" urlAtual={logoUrl} rotulo="Logo da Philar" />
-        </div>
+      <div className={membro.papel === 'dona' ? 'config-cliente' : ''} style={{ marginBottom: 24 }}>
+        {membro.papel === 'dona' && (
+          <div className="caixa">
+            <EnviarLogo alvo="agencia" urlAtual={logoUrl} rotulo="Logo da Philar" />
+          </div>
+        )}
         <form action={criarCliente} className="caixa" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <input name="nome" placeholder="Nome do novo cliente" required />
           <button className="btn" style={{ whiteSpace: 'nowrap' }}>+ Adicionar</button>

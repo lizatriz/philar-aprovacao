@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
-import { exigirAdmin } from '@/lib/auth';
+import { exigirEquipe } from '@/lib/auth';
+import NavAdmin from '@/components/NavAdmin';
 import { db, carregarPosts, urlAssinada } from '@/lib/supabase';
 import { excluirCliente, gerarLinkNovo } from '@/app/actions';
 import NovoPost from '@/components/NovoPost';
@@ -13,12 +14,12 @@ import EnviarLogo from '@/components/EnviarLogo';
 export const dynamic = 'force-dynamic';
 
 export default async function ClienteAdmin({ params }) {
-  await exigirAdmin();
+  const membro = await exigirEquipe();
   const { id } = await params;
   const { data: cliente } = await db().from('clientes').select('*').eq('id', id).maybeSingle();
   if (!cliente) notFound();
 
-  const [posts, logoUrl] = await Promise.all([carregarPosts(cliente.id), urlAssinada(cliente.logo_path)]);
+  const [posts, logoUrl] = await Promise.all([carregarPosts(cliente.id, { comNomes: true }), urlAssinada(cliente.logo_path)]);
   const h = await headers();
   const host = h.get('x-forwarded-host') || h.get('host');
   const proto = h.get('x-forwarded-proto') || 'https';
@@ -26,6 +27,7 @@ export default async function ClienteAdmin({ params }) {
 
   return (
     <main className="pagina">
+      <NavAdmin membro={membro} ativa="clientes" />
       <header className="topo">
         <div>
           <div className="marca" style={{ marginBottom: 10 }}><Link href="/admin">← Clientes</Link></div>
@@ -34,13 +36,15 @@ export default async function ClienteAdmin({ params }) {
             <h1>{cliente.nome}</h1>
           </div>
         </div>
-        <BotaoConfirmar
-          acao={excluirCliente.bind(null, cliente.id)}
-          pergunta={`Excluir ${cliente.nome} e todos os posts? Isso não tem volta.`}
-          className="btn perigo mini"
-        >
-          Excluir cliente
-        </BotaoConfirmar>
+        {membro.papel === 'dona' && (
+          <BotaoConfirmar
+            acao={excluirCliente.bind(null, cliente.id)}
+            pergunta={`Excluir ${cliente.nome} e todos os posts? Isso não tem volta.`}
+            className="btn perigo mini"
+          >
+            Excluir cliente
+          </BotaoConfirmar>
+        )}
       </header>
 
       <div className="config-cliente">

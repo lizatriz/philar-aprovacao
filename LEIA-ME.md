@@ -46,3 +46,12 @@ Site onde a Philar sobe posts e vídeos e cada cliente aprova, pede ajuste ou co
 
 ## Personalizar
 As cores estão no começo de `app/globals.css` (`--marca`, `--destaque`, `--fundo`).
+
+---
+
+## Logins da equipe (Fase 1)
+- Primeiro acesso: em `/admin/login`, use a senha antiga do painel (`ADMIN_PASSWORD`) para criar a conta principal (dona).
+- Depois disso, a `ADMIN_PASSWORD` só serve para essa configuração inicial.
+- Para adicionar alguém: **Equipe → Adicionar pessoa**. Envie o e-mail e a senha provisória. No primeiro login, a pessoa cria a própria senha.
+- Se alguém esquecer a senha: **Equipe → Nova senha**.
+- Recomendado no Supabase: Authentication → Sign In / Providers → desligue **Allow new users to sign up** (só a dona cria contas, pelo painel).

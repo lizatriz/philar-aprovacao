@@ -47,3 +47,17 @@ on conflict (id) do nothing;
 
 -- Logo de cada cliente
 alter table clientes add column if not exists logo_path text;
+
+-- Fase 1: logins individuais da equipe
+create table if not exists equipe (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  nome text not null,
+  papel text not null default 'equipe' check (papel in ('dona', 'equipe')),
+  trocar_senha boolean not null default true,
+  criado_em timestamptz not null default now()
+);
+alter table equipe enable row level security;
+grant all on table equipe to service_role;
+
+alter table posts add column if not exists criado_por uuid references equipe(user_id) on delete set null;
+alter table comentarios add column if not exists membro_id uuid references equipe(user_id) on delete set null;

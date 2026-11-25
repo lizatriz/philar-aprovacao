@@ -4,25 +4,15 @@ import crypto from 'crypto';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { db, BUCKET, clientePorToken } from '@/lib/supabase';
-import { exigirAdmin, fazerLogin, fazerLogout } from '@/lib/auth';
+import { exigirEquipe, exigirDona } from '@/lib/auth';
 
-/* ---------- Login ---------- */
-
-export async function login(_estado, formData) {
-  const ok = await fazerLogin(String(formData.get('senha') || ''));
-  if (!ok) return { erro: 'Senha incorreta.' };
-  redirect('/admin');
-}
-
-export async function sair() {
-  await fazerLogout();
-  redirect('/admin/login');
-}
+// Logo da agência e exclusão de clientes: só a dona. O resto: toda a equipe.
+const exigirParaLogo = (alvo) => (alvo === 'agencia' ? exigirDona() : exigirEquipe());
 
 /* ---------- Ações da Philar (admin) ---------- */
 
 export async function criarCliente(formData) {
-  await exigirAdmin();
+  await exigirEquipe();
   const nome = String(formData.get('nome') || '').trim();
   if (!nome) return;
   const { data, error } = await db().from('clientes').insert({ nome }).select().single();
@@ -31,7 +21,7 @@ export async function criarCliente(formData) {
 }
 
 export async function excluirCliente(clienteId) {
-  await exigirAdmin();
+  await exigirDona();
   const supa = db();
   const { data: posts } = await supa.from('posts').select('midias').eq('cliente_id', clienteId);
   const { data: cli } = await supa.from('clientes').select('logo_path').eq('id', clienteId).single();
@@ -43,7 +33,7 @@ export async function excluirCliente(clienteId) {
 }
 
 export async function gerarLinkNovo(clienteId) {
-  await exigirAdmin();
+  await exigirEquipe();
   const token = crypto.randomBytes(16).toString('hex');
   await db().from('clientes').update({ token }).eq('id', clienteId);
   revalidatePath(`/admin/${clienteId}`);
@@ -52,7 +42,7 @@ export async function gerarLinkNovo(clienteId) {
 // Gera "autorizações" para o navegador enviar os arquivos direto ao Supabase
 // (assim vídeos grandes não passam pelo servidor da Vercel, que tem limite de tamanho).
 export async function prepararUploads(clienteId, arquivos) {
-  await exigirAdmin();
+  await exigirEquipe();
   const supa = db();
   const resultado = [];
   for (const arq of arquivos) {
@@ -69,7 +59,7 @@ export async function prepararUploads(clienteId, arquivos) {
 
 // alvo = 'agencia' ou o id de um cliente
 export async function prepararUploadLogo(alvo, nomeArquivo) {
-  await exigirAdmin();
+  await exigirParaLogo(alvo);
   const ext = (nomeArquivo.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '');
   const pasta = alvo === 'agencia' ? 'marca' : alvo;
   const path = `${pasta}/logo-${crypto.randomUUID()}.${ext}`;
@@ -79,7 +69,7 @@ export async function prepararUploadLogo(alvo, nomeArquivo) {
 }
 
 export async function salvarLogo(alvo, path) {
-  await exigirAdmin();
+  await exigirParaLogo(alvo);
   const supa = db();
   if (alvo === 'agencia') {
     // apaga logos antigos da agência
@@ -100,7 +90,7 @@ export async function salvarLogo(alvo, path) {
 }
 
 export async function removerLogo(alvo) {
-  await exigirAdmin();
+  await exigirParaLogo(alvo);
   const supa = db();
   if (alvo === 'agencia') {
     const { data } = await supa.storage.from(BUCKET).list('marca', { limit: 100 });
@@ -115,9 +105,10 @@ export async function removerLogo(alvo) {
 }
 
 export async function criarPost(clienteId, dados) {
-  await exigirAdmin();
+  const membro = await exigirEquipe();
   const { error } = await db().from('posts').insert({
     cliente_id: clienteId,
+    criado_por: membro.user_id,
     titulo: dados.titulo,
     formato: dados.formato,
     legenda: dados.legenda || null,
@@ -130,7 +121,7 @@ export async function criarPost(clienteId, dados) {
 
 // Nova versão depois de um pedido de ajuste: troca legenda/data e, se vierem arquivos novos, as mídias.
 export async function atualizarPost(postId, dados) {
-  await exigirAdmin();
+  const membro = await exigirEquipe();
   const supa = db();
   const { data: post } = await supa.from('posts').select('cliente_id, midias').eq('id', postId).single();
   if (!post) return;
@@ -146,13 +137,13 @@ export async function atualizarPost(postId, dados) {
   }
   await supa.from('posts').update(mudancas).eq('id', postId);
   await supa.from('comentarios').insert({
-    post_id: postId, autor: 'philar', texto: 'Nova versão enviada para aprovação.',
+    post_id: postId, autor: 'philar', membro_id: membro.user_id, texto: 'Nova versão enviada para aprovação.',
   });
   revalidatePath(`/admin/${post.cliente_id}`);
 }
 
 export async function excluirPost(postId) {
-  await exigirAdmin();
+  await exigirEquipe();
   const supa = db();
   const { data: post } = await supa.from('posts').select('cliente_id, midias').eq('id', postId).single();
   if (!post) return;
@@ -163,18 +154,18 @@ export async function excluirPost(postId) {
 }
 
 export async function comentarComoPhilar(postId, texto) {
-  await exigirAdmin();
+  const membro = await exigirEquipe();
   texto = String(texto || '').trim();
   if (!texto) return;
   const supa = db();
   const { data: post } = await supa.from('posts').select('cliente_id').eq('id', postId).single();
   if (!post) return;
-  await supa.from('comentarios').insert({ post_id: postId, autor: 'philar', texto });
+  await supa.from('comentarios').insert({ post_id: postId, autor: 'philar', membro_id: membro.user_id, texto });
   revalidatePath(`/admin/${post.cliente_id}`);
 }
 
 export async function voltarParaPendente(postId) {
-  await exigirAdmin();
+  await exigirEquipe();
   const supa = db();
   const { data: post } = await supa.from('posts').select('cliente_id').eq('id', postId).single();
   if (!post) return;

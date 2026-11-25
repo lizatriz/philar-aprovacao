@@ -218,3 +218,38 @@ label { display: block; font-size: 13px; font-weight: 600; color: var(--suave); 
 .story-toque:hover span { opacity: 1; }
 .cal-story { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; margin-right: 4px; opacity: .75; }
 @media (max-width: 640px) { .grade-stories { grid-template-columns: 1fr; max-width: 360px; margin: 0 auto; } }
+
+/* Área da equipe */
+.nav-admin {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  padding-bottom: 16px; margin-bottom: 24px; border-bottom: 1px solid var(--linha);
+}
+.nav-logo { text-decoration: none; display: flex; align-items: center; }
+.nav-links { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.nav-links a {
+  text-decoration: none; font-weight: 600; font-size: 14px; color: var(--suave);
+  padding: 7px 12px; border-radius: 999px;
+}
+.nav-links a:hover { background: #ebe4da; }
+.nav-links a.ativa { background: #fff; color: var(--texto); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.nav-quem { font-size: 13px; color: var(--suave); margin: 0 6px 0 10px; }
+.sucesso { color: var(--ok); font-size: 14px; }
+.aviso {
+  background: var(--pendente-fundo); color: var(--pendente); border-radius: var(--raio);
+  padding: 14px 18px; margin-bottom: 20px; font-weight: 500;
+}
+.grade-forms { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; align-items: start; max-width: 720px; }
+.membro {
+  display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 16px 20px; border-bottom: 1px solid var(--linha);
+}
+.membro:last-child { border-bottom: 0; }
+.membro-info { display: flex; gap: 12px; align-items: flex-start; }
+.avatar {
+  width: 40px; height: 40px; border-radius: 50%; background: var(--marca); color: #fff; flex-shrink: 0;
+  display: grid; place-items: center; font-weight: 600; font-family: var(--serif);
+}
+@media (max-width: 640px) {
+  .nav-quem { display: none; }
+  .nav-links a { padding: 6px 9px; font-size: 13px; }
+}

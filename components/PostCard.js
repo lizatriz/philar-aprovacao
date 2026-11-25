@@ -39,6 +39,7 @@ export default function PostCard({ post, modo, token, realce }) {
         </div>
         <div className="post-meta">
           {FORMATOS[post.formato] || post.formato} · {formatarData(post.data_publicacao)}
+          {!cliente && post.autor?.nome && <> · enviado por {post.autor.nome.split(' ')[0]}</>}
         </div>
         {post.legenda && <p className="legenda">{post.legenda}</p>}
 
@@ -96,7 +97,11 @@ export default function PostCard({ post, modo, token, realce }) {
         <div className="comentarios">
           {post.comentarios.map((c) => (
             <div key={c.id} className={`comentario ${c.autor}`}>
-              <b>{c.autor === 'philar' ? 'Philar' : cliente ? 'Você' : 'Cliente'}</b>
+              <b>
+                {c.autor === 'philar'
+                  ? (!cliente && c.membro?.nome ? `Philar · ${c.membro.nome.split(' ')[0]}` : 'Philar')
+                  : cliente ? 'Você' : 'Cliente'}
+              </b>
               <small>{formatarHora(c.criado_em)}</small>
               <p>{c.texto}</p>
             </div>

@@ -102,3 +102,39 @@ alter table arquivos_marca enable row level security;
 alter table acessos enable row level security;
 alter table acessos_log enable row level security;
 grant all on table arquivos_marca, acessos, acessos_log to service_role;
+
+-- Pautas: copys para a designer, organizadas em calendário
+create table if not exists pautas (
+  id uuid primary key default gen_random_uuid(),
+  cliente_id uuid not null references clientes(id) on delete cascade,
+  titulo text not null,
+  data date,
+  formato text not null default 'carrossel',
+  status text not null default 'rascunho',
+  blocos jsonb not null default '[]',
+  legenda text,
+  notas text,
+  criado_por uuid references equipe(user_id) on delete set null,
+  atualizado_por uuid references equipe(user_id) on delete set null,
+  criado_em timestamptz not null default now(),
+  atualizado_em timestamptz not null default now()
+);
+alter table pautas enable row level security;
+grant all on table pautas to service_role;
+
+-- Pautas em cards: etiquetas, quadro interno e aprovação de copy pelo cliente
+alter table pautas add column if not exists pilar text;
+alter table pautas add column if not exists objetivo text;
+alter table pautas add column if not exists interno boolean not null default false;
+alter table pautas add column if not exists aprovacao text not null default 'pendente';
+
+create table if not exists pauta_comentarios (
+  id uuid primary key default gen_random_uuid(),
+  pauta_id uuid not null references pautas(id) on delete cascade,
+  autor text not null check (autor in ('cliente', 'philar')),
+  membro_id uuid references equipe(user_id) on delete set null,
+  texto text not null,
+  criado_em timestamptz not null default now()
+);
+alter table pauta_comentarios enable row level security;
+grant all on table pauta_comentarios to service_role;

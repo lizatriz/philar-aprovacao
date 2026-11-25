@@ -16,11 +16,15 @@ import LinhaEditorial from '@/components/LinhaEditorial';
 import ArquivosMarca from '@/components/ArquivosMarca';
 import Acessos from '@/components/Acessos';
 import ConfigurarCofre from '@/components/ConfigurarCofre';
+import Pautas from '@/components/Pautas';
+import { extrairPilares } from '@/lib/pautas';
 
 export const dynamic = 'force-dynamic';
 
 const ABAS = [
   ['conteudos', 'Conteúdos'],
+  ['pautas', 'Pautas'],
+  ['interno', '🔒 Quadro interno'],
   ['linha', 'Linha editorial'],
   ['marca', 'Marca'],
   ['acessos', 'Acessos'],
@@ -81,6 +85,13 @@ export default async function ClienteAdmin({ params, searchParams }) {
             : null}
         />
       )}
+      {(aba === 'pautas' || aba === 'interno') && (
+        <AbaPautas
+          clienteId={cliente.id}
+          interno={aba === 'interno'}
+          pilares={extrairPilares(cliente.linha_editorial?.pilares)}
+        />
+      )}
       {aba === 'marca' && <AbaMarca clienteId={cliente.id} />}
       {aba === 'acessos' && <AbaAcessos clienteId={cliente.id} souDona={souDona} />}
     </main>
@@ -120,6 +131,22 @@ async function AbaConteudos({ cliente, logoUrl }) {
       </div>
     </>
   );
+}
+
+async function AbaPautas({ clienteId, interno, pilares }) {
+  const { data, error } = await db()
+    .from('pautas')
+    .select(`*, autor:equipe!pautas_criado_por_fkey(nome), editor:equipe!pautas_atualizado_por_fkey(nome),
+      comentarios:pauta_comentarios(id, autor, texto, criado_em, membro:equipe(nome))`)
+    .eq('cliente_id', clienteId)
+    .eq('interno', interno)
+    .order('data', { ascending: true, nullsFirst: false });
+  if (error) throw new Error(error.message);
+  const pautas = (data || []).map((p) => ({
+    ...p,
+    comentarios: [...(p.comentarios || [])].sort((a, b) => a.criado_em.localeCompare(b.criado_em)),
+  }));
+  return <Pautas key={interno ? 'interno' : 'pautas'} clienteId={clienteId} pautas={pautas} pilares={pilares} interno={interno} />;
 }
 
 async function AbaMarca({ clienteId }) {

@@ -405,3 +405,12 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
   .galeria-linha { grid-template-columns: 1fr; }
   .abas-topo a { padding: 8px 14px; font-size: 14px; }
 }
+
+/* Editor de pilares */
+.tag-x {
+  border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 15px; line-height: 1;
+  margin-left: 6px; padding: 0 2px; opacity: .6;
+}
+.tag-x:hover { opacity: 1; }
+.editor-pilares input { background: #faf7f3; border-color: transparent; }
+.editor-pilares input:focus { background: #fff; }

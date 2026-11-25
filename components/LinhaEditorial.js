@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { salvarLinhaEditorial } from '@/app/hub-actions';
 import { SECOES_LINHA } from '@/lib/linha';
+import { extrairPilares, corPilar } from '@/lib/pautas';
 
 const HEX = /#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/g;
 
@@ -50,16 +51,74 @@ export default function LinhaEditorial({ clienteId, inicial, atualizadoInfo }) {
                   ))}
                 </div>
               )}
-              <textarea
-                id={`l-${c}`}
-                value={campos[c] || ''}
-                placeholder={dica}
-                onChange={(e) => mudar(c, e.target.value)}
-                rows={c === 'cores' || c === 'hashtags' ? 2 : 4}
-              />
+              {c === 'pilares' ? (
+                <EditorPilares
+                  pilares={extrairPilares(campos.pilares)}
+                  aoMudar={(lista) => mudar('pilares', lista.join('\n'))}
+                />
+              ) : (
+                <textarea
+                  id={`l-${c}`}
+                  value={campos[c] || ''}
+                  placeholder={dica}
+                  onChange={(e) => mudar(c, e.target.value)}
+                  rows={c === 'cores' || c === 'hashtags' ? 2 : 4}
+                />
+              )}
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+// Pilares como etiquetas: digita, aperta Enter (ou vírgula) e vira uma etiqueta
+function EditorPilares({ pilares, aoMudar }) {
+  const [texto, setTexto] = useState('');
+
+  function adicionar(valor = texto) {
+    const novos = extrairPilares(valor).filter(
+      (p) => !pilares.some((x) => x.toLowerCase() === p.toLowerCase())
+    );
+    if (novos.length) aoMudar([...pilares, ...novos]);
+    setTexto('');
+  }
+
+  return (
+    <div className="editor-pilares">
+      <div className="tags" style={{ marginBottom: pilares.length ? 10 : 0 }}>
+        {pilares.map((p) => (
+          <span key={p} className={`tag pilar grande ${corPilar(p)}`}>
+            {p}
+            <button
+              type="button" className="tag-x" aria-label={`Remover ${p}`}
+              onClick={() => aoMudar(pilares.filter((x) => x !== p))}
+            >
+              ×
+            </button>
+          </span>
+        ))}
+      </div>
+      <div className="link-copiar">
+        <input
+          id="l-pilares"
+          value={texto}
+          placeholder={pilares.length ? 'Adicionar outro pilar…' : 'Ex: Bastidores (aperte Enter para adicionar)'}
+          onChange={(e) => {
+            const v = e.target.value;
+            if (/[,;]/.test(v)) adicionar(v); else setTexto(v);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') { e.preventDefault(); adicionar(); }
+            if (e.key === 'Backspace' && !texto && pilares.length) aoMudar(pilares.slice(0, -1));
+          }}
+          onPaste={(e) => {
+            const colado = e.clipboardData.getData('text');
+            if (/[\n,;]/.test(colado)) { e.preventDefault(); adicionar(colado); }
+          }}
+        />
+        <button type="button" className="btn mini" disabled={!texto.trim()} onClick={() => adicionar()}>Adicionar</button>
       </div>
     </div>
   );
